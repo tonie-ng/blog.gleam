@@ -1,9 +1,9 @@
 pub fn create() -> String {
-	user() <> blogs()
+  user() <> blogs()
 }
 
 fn user() -> String {
-	"
+  "
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 		username TEXT NOT NULL UNIQUE,
@@ -16,7 +16,7 @@ fn user() -> String {
 }
 
 fn blogs() -> String {
-	"
+  "
 	CREATE TABLE IF NOT EXISTS blogs (
 		id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 		title TEXT NOT NULL DEFAULT 'Untitled',

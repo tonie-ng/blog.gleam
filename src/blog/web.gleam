@@ -2,17 +2,14 @@ import wisp.{type Request, type Response}
 import sqlight
 
 pub type Context {
-	Context (db: sqlight.Connection)
+  Context(db: sqlight.Connection)
 }
 
-pub fn middleware(
-	req: Request,
-	handle_request: fn(Request) -> Response
-) {
-	let req = wisp.method_override(req)
+pub fn middleware(req: Request, handle_request: fn(Request) -> Response) {
+  let req = wisp.method_override(req)
 
-	use <- wisp.log_request(req)
-	use <- wisp.rescue_crashes
-	use req <- wisp.handle_head(req)
-	handle_request(req)
+  use <- wisp.log_request(req)
+  use <- wisp.rescue_crashes
+  use req <- wisp.handle_head(req)
+  handle_request(req)
 }
