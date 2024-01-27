@@ -10,12 +10,10 @@ pub fn main() {
   let secret_key_base = wisp.random_string(64)
 
   let db = database.init()
-
   let assert Ok(_) = database.with_connection(db, database.migrate_db)
 
   let ctx = web.Context(db: db)
   let handler = router.handle_request(_, ctx)
-
   let assert Ok(_) =
     handler
     |> wisp.mist_handler(secret_key_base)

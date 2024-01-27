@@ -20,6 +20,7 @@ gleam_http = "~> 3.5"
 sqlight = "~> 0.9"
 mist = "~> 0.17"
 wisp = "~> 0.10"
+ids = "~> 0.12"
 
 [dev-dependencies]
 gleeunit = "~> 1.0"

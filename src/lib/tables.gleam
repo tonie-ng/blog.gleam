@@ -5,7 +5,7 @@ pub fn create() -> String {
 fn user() -> String {
   "
 	CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+		id TEXT PRIMARY KEY NOT NULL UNIQUE,
 		username TEXT NOT NULL UNIQUE,
 		email TEXT NOT NULL UNIQUE,
 		password TEXT NOT NULL,

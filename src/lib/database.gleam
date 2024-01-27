@@ -3,9 +3,7 @@ import lib/tables
 
 pub fn init() -> sqlight.Connection {
   let assert Ok(db) = sqlight.open("blog.db")
-
   let assert Ok(_) = sqlight.exec("pragma foreign_keys = on;", on: db)
-
   db
 }
 
