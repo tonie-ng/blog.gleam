@@ -3,7 +3,7 @@ import blog/web.{type Context}
 import lib/schemas/users
 
 pub fn signup(req: Request, ctx: Context) -> Response {
-	use json <- wisp.require_json(req)
+  use json <- wisp.require_json(req)
 
-	users.create_user(json, ctx.db)
+  users.create_user(json, ctx.db)
 }

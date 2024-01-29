@@ -36,75 +36,75 @@ pub fn create_user(input: dynamic.Dynamic, db: Connection) -> Response {
         sqlight.text(user_json.password),
       ]
       let user = {
-				use query_res <- sqlight.query(sql, on: db, with: args)
-				decode_user(query_res)
-			}
+        use query_res <- sqlight.query(sql, on: db, with: args)
+        decode_user(query_res)
+      }
 
-			case user {
-				Ok(res) -> {	
-					let result = created(res)
-					wisp.json_response(result, 201)
-				}
-				Error(_err) -> wisp.unprocessable_entity()
-			}
+      case user {
+        Ok(res) -> {
+          let result = created(res)
+          wisp.json_response(result, 201)
+        }
+        Error(_err) -> wisp.unprocessable_entity()
+      }
     }
     Error(err) -> {
-			let res = invalid_input(err)
-			wisp.json_response(res, 500)
-		}
+      let res = invalid_input(err)
+      wisp.json_response(res, 400)
+    }
   }
 }
 
 fn created(list: List(User)) {
-	let assert Ok(user) =  list.first(list)
-	let res = {
-		let object = json.object([
-			#("message", json.string("User has been created")),
-			#("id", json.string(user.id)),
-			#("username", json.string(user.email)),
-		])
+  let assert Ok(user) = list.first(list)
+  let res = {
+    let object =
+      json.object([
+        #("message", json.string("User has been created")),
+        #("id", json.string(user.id)),
+        #("username", json.string(user.email)),
+      ])
 
-		Ok(json.to_string_builder(object))
-	}
+    Ok(json.to_string_builder(object))
+  }
 
-	case res {
-		Ok(result) -> result
-		Error(err) -> err
-	}	
+  case res {
+    Ok(result) -> result
+    Error(err) -> err
+  }
 }
 
 fn invalid_input(list: dynamic.DecodeErrors) {
-	let assert Ok(err) = list.first(list)
-	let assert Ok(path) = list.first(err.path)
-	let res = {
-		let object = json.object([
-			#("message:", json.string("Invalid req parameters")),
-			#("expected", json.string(err.expected)),
-			#("found", json.string(err.found)),
-			#("path", json.string(path))
-		])
-		Ok(json.to_string_builder(object))
-	}
+  let assert Ok(err) = list.first(list)
+  let assert Ok(path) = list.first(err.path)
+  let res = {
+    let object =
+      json.object([
+        #("message:", json.string("Invalid req parameters")),
+        #("expected", json.string(err.expected)),
+        #("found", json.string(err.found)),
+        #("field", json.string(path)),
+      ])
+    Ok(json.to_string_builder(object))
+  }
 
-	case res {
-		Ok(result) -> result
-		Error(err) -> err
-	}
+  case res {
+    Ok(result) -> result
+    Error(err) -> err
+  }
 }
 
-fn decode_user(
-	json: dynamic.Dynamic
-) -> Result(User, dynamic.DecodeErrors) {
-  let decoder = 
-		dynamic.decode5(
-			User,
-			dynamic.field(named: "id", of: dynamic.string),
-			dynamic.field(named: "email", of: dynamic.string),
-			dynamic.field(named: "password", of: dynamic.string),
-			dynamic.field(named: "created_at", of: dynamic.int),
-			dynamic.field(named: "updated_at", of: dynamic.int),
-		)
-	decoder(json)
+fn decode_user(json: dynamic.Dynamic) -> Result(User, dynamic.DecodeErrors) {
+  let decoder =
+    dynamic.decode5(
+      User,
+      dynamic.field(named: "id", of: dynamic.string),
+      dynamic.field(named: "email", of: dynamic.string),
+      dynamic.field(named: "password", of: dynamic.string),
+      dynamic.field(named: "created_at", of: dynamic.int),
+      dynamic.field(named: "updated_at", of: dynamic.int),
+    )
+  decoder(json)
 }
 
 fn decode_userinput(
