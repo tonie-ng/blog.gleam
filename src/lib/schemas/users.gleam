@@ -1,9 +1,9 @@
 import gleam/dynamic
+import gleam/list
 import lib/utils.{generate_nanoid}
-import wisp.{type Request, type Response}
-import blog/web.{type Context}
-import gleam/http.{Get, Post}
-import sqlight
+import wisp.{type Response}
+import sqlight.{type Connection}
+import gleam/json
 
 pub type User {
   User(
@@ -19,47 +19,92 @@ pub type UserInput {
   UserInput(username: String, email: String, password: String)
 }
 
-pub fn all(req: Request, ctx: Context) -> Response {
-  case req.method {
-    Post -> create_user(req, ctx)
-    _ -> wisp.method_not_allowed(allowed: [Get, Post])
-  }
-}
-
-fn create_user(req: Request, ctx: Context) -> Response {
-  use json <- wisp.require_json(req)
-  let user_input = decode_userinput(json)
+pub fn create_user(input: dynamic.Dynamic, db: Connection) -> Response {
+  let user_input = decode_userinput(input)
   case user_input {
-    Ok(user) -> {
+    Ok(user_json) -> {
       let id = generate_nanoid()
       let sql =
         "
 				INSERT INTO users (id, username, email, password, created_at, updated_at)
 				VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
-			"
+				"
       let args = [
         sqlight.text(id),
-        sqlight.text(user.username),
-        sqlight.text(user.email),
-        sqlight.text(user.password),
+        sqlight.text(user_json.username),
+        sqlight.text(user_json.email),
+        sqlight.text(user_json.password),
       ]
-      let assert Ok(_user) =
-        sqlight.query(sql, on: ctx.db, with: args, expecting: decode_user())
-      wisp.ok()
+      let user = {
+				use query_res <- sqlight.query(sql, on: db, with: args)
+				decode_user(query_res)
+			}
+
+			case user {
+				Ok(res) -> {	
+					let result = created(res)
+					wisp.json_response(result, 201)
+				}
+				Error(_err) -> wisp.unprocessable_entity()
+			}
     }
-    Error(_) -> wisp.unprocessable_entity()
+    Error(err) -> {
+			let res = invalid_input(err)
+			wisp.json_response(res, 500)
+		}
   }
 }
 
-fn decode_user() -> dynamic.Decoder(User) {
-  dynamic.decode5(
-    User,
-    dynamic.field(named: "id", of: dynamic.string),
-    dynamic.field(named: "email", of: dynamic.string),
-    dynamic.field(named: "password", of: dynamic.string),
-    dynamic.field(named: "created_at", of: dynamic.int),
-    dynamic.field(named: "updated_at", of: dynamic.int),
-  )
+fn created(list: List(User)) {
+	let assert Ok(user) =  list.first(list)
+	let res = {
+		let object = json.object([
+			#("message", json.string("User has been created")),
+			#("id", json.string(user.id)),
+			#("username", json.string(user.email)),
+		])
+
+		Ok(json.to_string_builder(object))
+	}
+
+	case res {
+		Ok(result) -> result
+		Error(err) -> err
+	}	
+}
+
+fn invalid_input(list: dynamic.DecodeErrors) {
+	let assert Ok(err) = list.first(list)
+	let assert Ok(path) = list.first(err.path)
+	let res = {
+		let object = json.object([
+			#("message:", json.string("Invalid req parameters")),
+			#("expected", json.string(err.expected)),
+			#("found", json.string(err.found)),
+			#("path", json.string(path))
+		])
+		Ok(json.to_string_builder(object))
+	}
+
+	case res {
+		Ok(result) -> result
+		Error(err) -> err
+	}
+}
+
+fn decode_user(
+	json: dynamic.Dynamic
+) -> Result(User, dynamic.DecodeErrors) {
+  let decoder = 
+		dynamic.decode5(
+			User,
+			dynamic.field(named: "id", of: dynamic.string),
+			dynamic.field(named: "email", of: dynamic.string),
+			dynamic.field(named: "password", of: dynamic.string),
+			dynamic.field(named: "created_at", of: dynamic.int),
+			dynamic.field(named: "updated_at", of: dynamic.int),
+		)
+	decoder(json)
 }
 
 fn decode_userinput(

@@ -1,12 +1,12 @@
 import wisp.{type Request, type Response}
 import blog/web.{type Context}
-import lib/schemas/users
+import blog/handlers/auth
 
 pub fn handle_request(req: Request, ctx: Context) -> Response {
   use _req <- web.middleware(req)
 
   case wisp.path_segments(req) {
-    ["users"] -> users.all(req, ctx)
+    ["signup"] -> auth.signup(req, ctx)
     _ -> wisp.not_found()
   }
 }
