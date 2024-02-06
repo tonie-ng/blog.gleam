@@ -8,7 +8,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
   case wisp.path_segments(req) {
     ["signup"] -> auth.signup(req, ctx)
-		["users", id] -> user.one(req, id, ctx)
+    ["users", id] -> user.one(req, id, ctx)
     _ -> wisp.not_found()
   }
 }

@@ -24,16 +24,13 @@ pub fn generic_err(list: dynamic.DecodeErrors, message: String) {
 }
 
 pub fn sqlight_err(err: SqlightError) {
-	let res = {
-		let object = 
-			json.object([
-				#("message", json.string(err.message)),
-			])
-		Ok(json.to_string_builder(object))
-	}
+  let res = {
+    let object = json.object([#("message", json.string(err.message))])
+    Ok(json.to_string_builder(object))
+  }
 
-	case res {
-		Ok(result) -> result
-		Error(err) -> err
-	}
+  case res {
+    Ok(result) -> result
+    Error(err) -> err
+  }
 }
