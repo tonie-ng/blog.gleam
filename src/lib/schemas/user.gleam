@@ -16,6 +16,8 @@ pub fn create(
 		INSERT INTO users (id, username, email, password, created_at, updated_at)
 		VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
 	"
+  let password = hash_password(input.password)
+
   let row =
     sqlight.query(
       sql,
@@ -24,7 +26,7 @@ pub fn create(
         sqlight.text(id),
         sqlight.text(input.username),
         sqlight.text(input.email),
-        sqlight.text(input.password),
+        sqlight.text(password),
       ],
       expecting: decode_user(),
     )
@@ -49,6 +51,10 @@ pub fn user_json(user: types.User) -> StringBuilder {
   json.to_string_builder(u)
 }
 
+pub fn hash_password(password: String) -> String {
+  hash(password, [])
+}
+
 fn decode_user() -> dynamic.Decoder(types.User) {
   dynamic.decode6(
     types.User,
@@ -60,3 +66,6 @@ fn decode_user() -> dynamic.Decoder(types.User) {
     dynamic.field(named: "updated_at", of: dynamic.int),
   )
 }
+
+@external(erlang, "Elixir.Argon2", "hash_pwd_salt")
+fn hash(password: String, list: List(a)) -> String
