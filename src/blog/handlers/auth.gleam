@@ -5,7 +5,7 @@ import lib/schemas/user
 import gleam/dynamic
 import lib/types
 import lib/errors
-import gleam/option.{None, Some}
+import gleam/json
 
 pub fn signup(req: Request, ctx: Context) -> Response {
   use json <- wisp.require_json(req)
@@ -13,17 +13,15 @@ pub fn signup(req: Request, ctx: Context) -> Response {
 
   let result = user.create(input, ctx.db)
   case result {
-    Ok(u) -> {
-      case u {
-        Some(res) -> {
-          let response = user.user_json(res)
-          wisp.json_response(response, 201)
-        }
-        None -> {
-          let response = utils.failed_to_create()
-          wisp.json_response(response, 500)
-        }
-      }
+    Ok(id) -> {
+			let u =
+				json.object([
+					#("id", json.string(id)),
+					#("email", json.string(input.email)),
+					#("username", json.string(input.username))
+			])
+			let response = json.to_string_builder(u)
+			wisp.json_response(response, 200)
     }
     Error(err) -> {
       let error = errors.sqlight_err(err)

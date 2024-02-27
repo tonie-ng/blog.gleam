@@ -4,8 +4,8 @@ pub type User {
     username: String,
     email: String,
     password: String,
-    created_at: Int,
-    updated_at: Int,
+    created_at: String,
+    updated_at: String,
   )
 }
 
