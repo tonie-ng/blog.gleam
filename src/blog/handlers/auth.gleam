@@ -14,14 +14,14 @@ pub fn signup(req: Request, ctx: Context) -> Response {
   let result = user.create(input, ctx.db)
   case result {
     Ok(id) -> {
-			let u =
-				json.object([
-					#("id", json.string(id)),
-					#("email", json.string(input.email)),
-					#("username", json.string(input.username))
-			])
-			let response = json.to_string_builder(u)
-			wisp.json_response(response, 200)
+      let u =
+        json.object([
+          #("id", json.string(id)),
+          #("email", json.string(input.email)),
+          #("username", json.string(input.username)),
+        ])
+      let response = json.to_string_builder(u)
+      wisp.json_response(response, 200)
     }
     Error(err) -> {
       let error = errors.sqlight_err(err)

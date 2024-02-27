@@ -25,10 +25,11 @@ pub fn failed_to_create() -> StringBuilder {
   json.to_string_builder(u)
 }
 
- pub fn failed_to_get(event: String) -> StringBuilder {
-  let u = json.object([
-		#("message", json.string("Failed to get resource")),
-		#("event", json.string(event))
-	])
+pub fn failed_to_get(event: String) -> StringBuilder {
+  let u =
+    json.object([
+      #("message", json.string("Failed to get resource")),
+      #("event", json.string(event)),
+    ])
   json.to_string_builder(u)
 }

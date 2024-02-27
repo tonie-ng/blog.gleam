@@ -6,20 +6,24 @@ import lib/types
 import gleam/string_builder.{type StringBuilder}
 import gleam/option.{type Option, None, Some}
 
-
 pub fn find_one(
-	value: String, db: Connection, field: String
+  value: String,
+  db: Connection,
+  field: String,
 ) -> Result(Option(types.User), Error) {
-	let sql = 
-		"
+  let sql = "
 		SELECT id, username, email, created_at, updated_at
 		FROM users
-		WHERE " <> field <>" = ?;
+		WHERE " <> field <> " = ?;
 	"
 
-	let row = sqlight.query(
-		sql, on: db, with: [sqlight.text(value)], expecting: decode_user()
-	)
+  let row =
+    sqlight.query(
+      sql,
+      on: db,
+      with: [sqlight.text(value)],
+      expecting: decode_user(),
+    )
   case row {
     Ok([user]) | Ok([user, ..]) -> Ok(Some(user))
     Ok([]) -> Ok(None)
@@ -28,25 +32,24 @@ pub fn find_one(
 }
 
 pub fn delete(
-	value: String, db: Connection, field: String
+  value: String,
+  db: Connection,
+  field: String,
 ) -> Result(Nil, Error) {
-	let sql =
-		"
+  let sql = "
 		DELETE FROM users
-		WHERE "<> field <> " = ?;
+		WHERE " <> field <> " = ?;
 	"
 
-	let row = sqlight.query(sql, on: db, with: [sqlight.text(value)], expecting: Ok)
-	case row {
-		Ok(_) -> Ok(Nil)
-		Error(err) -> Error(err)
-	}
+  let row =
+    sqlight.query(sql, on: db, with: [sqlight.text(value)], expecting: Ok)
+  case row {
+    Ok(_) -> Ok(Nil)
+    Error(err) -> Error(err)
+  }
 }
 
-pub fn create(
-  input: types.SignUp,
-  db: Connection,
-) -> Result(String, Error) {
+pub fn create(input: types.SignUp, db: Connection) -> Result(String, Error) {
   let id = generate_nanoid()
   let sql =
     "
@@ -94,8 +97,8 @@ fn decode_user() -> dynamic.Decoder(types.User) {
     dynamic.element(1, dynamic.string),
     dynamic.element(2, dynamic.string),
     dynamic.element(3, dynamic.string),
-		dynamic.element(4, dynamic.string),
-		dynamic.element(4, dynamic.string),
+    dynamic.element(4, dynamic.string),
+    dynamic.element(4, dynamic.string),
   )
 }
 
