@@ -4,6 +4,7 @@ import gleam/erlang/process
 import lib/database
 import blog/web
 import blog/router
+import lib/schemas/token
 
 pub fn main() {
   wisp.configure_logger()
@@ -11,6 +12,7 @@ pub fn main() {
 
   let db = database.init()
   let assert Ok(_) = database.with_connection(db, database.migrate_db)
+  let assert Ok(_) = token.drop(db)
 
   let ctx = web.Context(db: db)
   let handler = router.handle_request(_, ctx)

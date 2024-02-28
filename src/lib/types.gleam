@@ -12,3 +12,7 @@ pub type User {
 pub type SignUp {
   SignUp(username: String, email: String, password: String)
 }
+
+pub type SignIn {
+  SignIn(email: String, password: String)
+}

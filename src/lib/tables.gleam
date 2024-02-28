@@ -1,5 +1,5 @@
 pub fn create() -> String {
-  user() <> blogs()
+  user() <> blogs() <> auth_token()
 }
 
 fn user() -> String {
@@ -26,5 +26,18 @@ fn blogs() -> String {
 		updated_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (user_id) REFERENCES users (id)
 	);
+	"
+}
+
+fn auth_token() -> String {
+  "
+	CREATE TABLE IF NOT EXISTS auth_tokens (
+		id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+		token TEXT NOT NULL UNIQUE,
+		user_id INTEGER NOT NULL UNIQUE,
+		created_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users (id)
+	)
 	"
 }

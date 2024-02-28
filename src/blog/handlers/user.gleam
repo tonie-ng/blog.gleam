@@ -20,7 +20,7 @@ pub fn delete_user(ctx: Context, id: String) -> Response {
     Ok(_) -> wisp.no_content()
     Error(err) -> {
       let response = errors.sqlight_err(err)
-      wisp.json_response(response, 409)
+      wisp.json_response(response, 500)
     }
   }
 }
@@ -44,7 +44,7 @@ pub fn find_user_by_id(ctx: Context, id: String) -> Response {
     }
     Error(err) -> {
       let error = errors.sqlight_err(err)
-      wisp.json_response(error, 409)
+      wisp.json_response(error, 500)
     }
   }
 }

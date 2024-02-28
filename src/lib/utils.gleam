@@ -20,8 +20,21 @@ pub fn decode_input(
   user_input
 }
 
-pub fn failed_to_create() -> StringBuilder {
-  let u = json.object([#("message", json.string("Failed to create resource"))])
+pub fn failed_to_create(event: String) -> StringBuilder {
+  let u =
+    json.object([
+      #("message", json.string("Failed to create resource")),
+      #("event", json.string(event)),
+    ])
+  json.to_string_builder(u)
+}
+
+pub fn not_authorized(event: String) -> StringBuilder {
+  let u =
+    json.object([
+      #("message", json.string("Unauthorized request")),
+      #("event", json.string(event)),
+    ])
   json.to_string_builder(u)
 }
 
