@@ -33,6 +33,7 @@ pub fn find_user_by_id(ctx: Context, id: String) -> Response {
       case u {
         Some(res) -> {
           let response = user.user_json(res)
+
           wisp.json_response(response, 200)
         }
         None -> {

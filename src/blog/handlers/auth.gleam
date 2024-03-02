@@ -1,6 +1,5 @@
 import wisp.{type Request, type Response}
 import blog/web.{type Context}
-import gleam/string
 import lib/utils
 import sqlight.{type Connection, type Error}
 import lib/schemas/user
@@ -17,8 +16,7 @@ pub fn signup(req: Request, ctx: Context) -> Response {
   use json <- wisp.require_json(req)
   let input = utils.decode_input(json, decode_signup)
 
-  use <- check_user(input.email, "email", ctx.db)
-  wisp.ok()
+  use <- check_user_up(input.email, "email", ctx.db)
 
   case user.create(input, ctx.db) {
     Ok(id) -> {
@@ -38,69 +36,26 @@ pub fn signup(req: Request, ctx: Context) -> Response {
   }
 }
 
-pub fn signout(req: Request, ctx: Context) -> Response {
-  use <- wisp.require_method(req, Post)
-
-  case wisp.get_cookie(req, "auth_token", wisp.Signed) {
-    Ok(value) -> {
-      case string.is_empty(value) {
-        True -> {
-          let res = utils.not_authorized("You're not logged in")
-          wisp.json_response(res, 401)
-        }
-        False -> {
-          case token.delete("token", value, ctx.db) {
-            Ok(_) -> {
-              wisp.no_content()
-              |> wisp.set_cookie(req, "auth_token", value, wisp.Signed, 0)
-            }
-            Error(_) -> wisp.internal_server_error()
-          }
-        }
-      }
-    }
-    Error(_) -> {
-      let res = utils.not_authorized("You are not logged in")
-      wisp.json_response(res, 401)
-    }
-  }
-}
-
 pub fn signin(req: Request, ctx: Context) -> Response {
   use <- wisp.require_method(req, Post)
   use json <- wisp.require_json(req)
   let input = utils.decode_input(json, decode_signin)
-  let row = user.find_one(input.email, ctx.db, "email")
 
-  case row {
-    Ok(u) -> {
-      case u {
-        Some(usr) -> {
-          use <- cleanup(usr.id, "user_id", req, ctx.db)
-          case token.generate(usr.id, ctx.db) {
-            Ok(tok) -> {
-              wisp.accepted()
-              |> wisp.set_cookie(
-                req,
-                "auth_token",
-                tok,
-                wisp.Signed,
-                60 * 60 * 24,
-              )
-            }
-            Error(_) -> wisp.bad_request()
-          }
-        }
-        None -> {
-          let response =
-            utils.failed_to_get("User with" <> input.email <> " doesn't exist")
-          wisp.json_response(response, 404)
-        }
-      }
+  use usr <- check_user_in(input.email, "email", input.password, ctx.db)
+  case token.generate(usr.id, ctx.db) {
+    Ok(tok) -> {
+      let u =
+        json.object([
+          #("id", json.string(usr.id)),
+          #("email", json.string(usr.email)),
+          #("username", json.string(usr.username)),
+        ])
+      let response = json.to_string_builder(u)
+      wisp.json_response(response, 200)
+      |> wisp.set_cookie(req, "auth_token", tok, wisp.Signed, 60 * 60 * 24 * 3)
     }
-    Error(err) -> {
-      let error = errors.sqlight_err(err)
-      wisp.json_response(error, 500)
+    Error(_) -> {
+      wisp.internal_server_error()
     }
   }
 }
@@ -130,7 +85,7 @@ fn decode_signin(
   decoder(json)
 }
 
-fn check_user(
+fn check_user_up(
   value: String,
   field: String,
   db: Connection,
@@ -156,28 +111,38 @@ fn check_user(
   }
 }
 
-fn cleanup(
+fn check_user_in(
   value: String,
   field: String,
-  req: Request,
+  password: String,
   db: Connection,
-  next: fn() -> Response,
+  next: fn(types.User) -> Response,
 ) -> Response {
-  let tok = wisp.get_cookie(req, "auth_token", wisp.Signed)
-  case tok {
-    Ok(t) -> {
-      case string.is_empty(t) {
-        True -> next()
-        False -> {
-          case token.delete(field, value, db) {
-            Ok(_) -> next()
-            Error(_) -> {
-              wisp.internal_server_error()
+  case user.find_one(value, db, field) {
+    Ok(u) -> {
+      case u {
+        Some(usr) -> {
+          case compare_password(password, usr.password) {
+            True -> next(usr)
+            False -> {
+              let response = utils.failed_to_get("Incorrect password")
+              wisp.json_response(response, 409)
             }
           }
         }
+        None -> {
+          let response =
+            utils.failed_to_get("User with " <> value <> " doesn't exist")
+          wisp.json_response(response, 409)
+        }
       }
     }
-    Error(_) -> next()
+    Error(err) -> {
+      let error = errors.sqlight_err(err)
+      wisp.json_response(error, 500)
+    }
   }
 }
+
+@external(erlang, "Elixir.Argon2", "verify_pass")
+pub fn compare_password(password: String, hash: String) -> Bool

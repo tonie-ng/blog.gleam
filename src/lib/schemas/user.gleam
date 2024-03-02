@@ -12,8 +12,7 @@ pub fn find_one(
   field: String,
 ) -> Result(Option(types.User), Error) {
   let sql = "
-		SELECT id, username, email, created_at, updated_at
-		FROM users
+		SELECT * FROM users
 		WHERE " <> field <> " = ?;
 	"
 
@@ -56,7 +55,7 @@ pub fn create(input: types.SignUp, db: Connection) -> Result(String, Error) {
 		INSERT INTO users (id, username, email, password, created_at, updated_at)
 		VALUES (?, ?, ?, ?, datetime('now'), datetime('now'));
 	"
-  let password = hash_password(input.password)
+  let password = hash(input.password, [])
 
   let row =
     sqlight.query(
@@ -98,12 +97,8 @@ fn decode_user() -> dynamic.Decoder(types.User) {
     dynamic.element(2, dynamic.string),
     dynamic.element(3, dynamic.string),
     dynamic.element(4, dynamic.string),
-    dynamic.element(4, dynamic.string),
+    dynamic.element(5, dynamic.string),
   )
-}
-
-fn hash_password(password: String) -> String {
-  hash(password, [])
 }
 
 @external(erlang, "Elixir.Argon2", "hash_pwd_salt")

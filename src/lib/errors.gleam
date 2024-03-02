@@ -2,8 +2,9 @@ import gleam/dynamic
 import sqlight.{type Error as SqlightError}
 import gleam/list
 import gleam/json
+import gleam/string_builder.{type StringBuilder}
 
-pub fn generic_err(list: dynamic.DecodeErrors, message: String) {
+pub fn generic_err(list: dynamic.DecodeErrors, message: String) -> StringBuilder {
   let assert Ok(err) = list.first(list)
   let assert Ok(path) = list.first(err.path)
   let res = {
@@ -23,7 +24,7 @@ pub fn generic_err(list: dynamic.DecodeErrors, message: String) {
   }
 }
 
-pub fn sqlight_err(err: SqlightError) {
+pub fn sqlight_err(err: SqlightError) -> StringBuilder {
   let res = {
     let object = json.object([#("message", json.string(err.message))])
     Ok(json.to_string_builder(object))

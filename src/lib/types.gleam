@@ -9,6 +9,10 @@ pub type User {
   )
 }
 
+pub type Token {
+  Token(id: String, user_id: String, token: String, created_at: String)
+}
+
 pub type SignUp {
   SignUp(username: String, email: String, password: String)
 }
