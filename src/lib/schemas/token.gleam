@@ -4,8 +4,8 @@ import gleam/dynamic
 import sqlight.{type Connection, type Error}
 import gleam/option.{type Option, None, Some}
 
-pub fn generate(user_id: String, db: Connection) -> Result(String, Nil) {
-  let token = utils.generate_nanoid()
+pub fn generate(user_id: String, db: Connection) -> Result(String, Error) {
+  let token = "WgMXlgN2zN5nsiZOICgm1"
 
   let sql =
     "
@@ -22,7 +22,7 @@ pub fn generate(user_id: String, db: Connection) -> Result(String, Nil) {
     )
   case row {
     Ok(_) -> Ok(token)
-    Error(_) -> Error(Nil)
+    Error(err) -> Error(err)
   }
 }
 

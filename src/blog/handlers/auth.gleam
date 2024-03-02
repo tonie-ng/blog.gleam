@@ -1,4 +1,5 @@
 import wisp.{type Request, type Response}
+import gleam/io
 import blog/web.{type Context}
 import lib/utils
 import sqlight.{type Connection, type Error}
@@ -44,6 +45,7 @@ pub fn signin(req: Request, ctx: Context) -> Response {
   use usr <- check_user_in(input.email, "email", input.password, ctx.db)
   case token.generate(usr.id, ctx.db) {
     Ok(tok) -> {
+      io.debug(tok)
       let u =
         json.object([
           #("id", json.string(usr.id)),
@@ -54,8 +56,32 @@ pub fn signin(req: Request, ctx: Context) -> Response {
       wisp.json_response(response, 200)
       |> wisp.set_cookie(req, "auth_token", tok, wisp.Signed, 60 * 60 * 24 * 3)
     }
+    Error(err) -> {
+      let res = errors.sqlight_err(err)
+      wisp.json_response(res, 500)
+    }
+  }
+}
+
+pub fn signout(req: Request, ctx: Context) -> Response {
+  use <- wisp.require_method(req, Post)
+  case wisp.get_cookie(req, "auth_token", wisp.Signed) {
+    Ok(tok) -> {
+      io.debug(tok)
+      case token.delete("token", tok, ctx.db) {
+        Ok(_) -> {
+          wisp.no_content()
+          |> wisp.set_cookie(req, "auth_token", tok, wisp.Signed, 0)
+        }
+        Error(_) -> {
+          let res = utils.not_authorized("You're not logged in")
+          wisp.json_response(res, 401)
+        }
+      }
+    }
     Error(_) -> {
-      wisp.internal_server_error()
+      let res = utils.not_authorized("You're not logged in")
+      wisp.json_response(res, 401)
     }
   }
 }
