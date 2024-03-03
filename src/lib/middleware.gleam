@@ -1,4 +1,5 @@
 import wisp.{type Request, type Response}
+import lib/errors
 import lib/schemas/token
 import sqlight.{type Connection, type Error}
 import gleam/option.{None, Some}
@@ -19,33 +20,34 @@ pub fn check_loggedin(
               next(t.user_id)
             }
             None -> {
-							let res = utils.not_authorized("Invalid session token")
-							wisp.json_response(res, 401)
+              let res = utils.not_authorized("Invalid session token")
+              wisp.json_response(res, 401)
             }
           }
         }
-        Error(_) -> {
-					wisp.internal_server_error()
+        Error(err) -> {
+          let res = errors.sqlight_err(err)
+          wisp.json_response(res, 500)
         }
       }
     }
     Error(_) -> {
-			let res = utils.not_authorized("You are not logged in")
-			wisp.json_response(res, 401)
+      let res = utils.not_authorized("You are not logged in")
+      wisp.json_response(res, 401)
     }
   }
 }
 
 pub fn check_authorized(
-	id: String,
-	user_id: String,
-	next: fn() -> Response
+  resource_userid: String,
+  token_userid: String,
+  next: fn() -> Response,
 ) -> Response {
-	case id == user_id {
-		True -> next()
-		False -> {
-			let res = utils.not_authorized("You can't access this resource")
-			wisp.json_response(res, 401)
-		}
-	}
+  case resource_userid == token_userid {
+    True -> next()
+    False -> {
+      let res = utils.not_authorized("You can't access this resource")
+      wisp.json_response(res, 401)
+    }
+  }
 }
