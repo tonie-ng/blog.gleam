@@ -5,8 +5,7 @@ import sqlight.{type Connection, type Error}
 import gleam/option.{type Option, None, Some}
 
 pub fn generate(user_id: String, db: Connection) -> Result(String, Error) {
-  let token = "WgMXlgN2zN5nsiZOICgm1"
-
+  let token = utils.generate_nanoid()
   let sql =
     "
 		INSERT into auth_tokens (id, token, user_id, created_at)

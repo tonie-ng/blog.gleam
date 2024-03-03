@@ -17,7 +17,7 @@ pub fn signup(req: Request, ctx: Context) -> Response {
   use json <- wisp.require_json(req)
   let input = utils.decode_input(json, decode_signup)
 
-  use <- check_user_up(input.email, "email", ctx.db)
+  use <- check_user_signup(input.email, "email", ctx.db)
 
   case user.create(input, ctx.db) {
     Ok(id) -> {
@@ -42,7 +42,7 @@ pub fn signin(req: Request, ctx: Context) -> Response {
   use json <- wisp.require_json(req)
   let input = utils.decode_input(json, decode_signin)
 
-  use usr <- check_user_in(input.email, "email", input.password, ctx.db)
+  use usr <- check_user_signin(input.email, "email", input.password, ctx.db)
   case token.generate(usr.id, ctx.db) {
     Ok(tok) -> {
       io.debug(tok)
@@ -111,7 +111,7 @@ fn decode_signin(
   decoder(json)
 }
 
-fn check_user_up(
+fn check_user_signup(
   value: String,
   field: String,
   db: Connection,
@@ -137,7 +137,7 @@ fn check_user_up(
   }
 }
 
-fn check_user_in(
+fn check_user_signin(
   value: String,
   field: String,
   password: String,
