@@ -81,7 +81,7 @@ pub fn drop(db: Connection) -> Result(Nil, Nil) {
 fn decode_token() -> dynamic.Decoder(types.Token) {
   dynamic.decode4(
     types.Token,
-    dynamic.element(0, dynamic.string),
+    dynamic.element(0, dynamic.int),
     dynamic.element(1, dynamic.string),
     dynamic.element(2, dynamic.string),
     dynamic.element(3, dynamic.string),

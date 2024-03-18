@@ -1,5 +1,4 @@
 import wisp.{type Request, type Response}
-import gleam/io
 import blog/web.{type Context}
 import lib/utils
 import sqlight.{type Connection, type Error}
@@ -11,11 +10,12 @@ import lib/errors
 import gleam/http.{Post}
 import gleam/json
 import lib/schemas/token
+import lib/middleware
 
 pub fn signup(req: Request, ctx: Context) -> Response {
   use <- wisp.require_method(req, Post)
   use json <- wisp.require_json(req)
-  let input = utils.decode_input(json, decode_signup)
+  use input <- middleware.decode_input(json, decode_signup)
 
   use <- check_user_signup(input.email, "email", ctx.db)
 
@@ -40,12 +40,11 @@ pub fn signup(req: Request, ctx: Context) -> Response {
 pub fn signin(req: Request, ctx: Context) -> Response {
   use <- wisp.require_method(req, Post)
   use json <- wisp.require_json(req)
-  let input = utils.decode_input(json, decode_signin)
+  use input <- middleware.decode_input(json, decode_signin)
 
   use usr <- check_user_signin(input.email, "email", input.password, ctx.db)
   case token.generate(usr.id, ctx.db) {
     Ok(tok) -> {
-      io.debug(tok)
       let u =
         json.object([
           #("id", json.string(usr.id)),
@@ -67,7 +66,6 @@ pub fn signout(req: Request, ctx: Context) -> Response {
   use <- wisp.require_method(req, Post)
   case wisp.get_cookie(req, "auth_token", wisp.Signed) {
     Ok(tok) -> {
-      io.debug(tok)
       case token.delete("token", tok, ctx.db) {
         Ok(_) -> {
           wisp.no_content()

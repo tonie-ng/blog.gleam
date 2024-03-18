@@ -76,10 +76,10 @@ pub fn create(input: types.SignUp, db: Connection) -> Result(String, Error) {
   }
 }
 
-pub fn user_json(user: types.User) -> StringBuilder {
+pub fn user_json(id: String, user: types.User) -> StringBuilder {
   let u =
     json.object([
-      #("id", json.string(user.id)),
+      #("id", json.string(id)),
       #("email", json.string(user.email)),
       #("username", json.string(user.username)),
       #("created_at", json.string(user.created_at)),

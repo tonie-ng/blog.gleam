@@ -4,16 +4,30 @@ import lib/schemas/token
 import sqlight.{type Connection, type Error}
 import gleam/option.{None, Some}
 import lib/utils
+import gleam/dynamic
+
+pub fn decode_input(
+  input: dynamic.Dynamic,
+  decoder: fn(dynamic.Dynamic) -> Result(a, dynamic.DecodeErrors),
+  next: fn(a) -> Response,
+) -> Response {
+  case decoder(input) {
+    Ok(validinput) -> next(validinput)
+    Error(_err) -> {
+      let res = errors.generic_err("Invalid input parameters")
+      wisp.json_response(res, 400)
+    }
+  }
+}
 
 pub fn check_loggedin(
-  token: String,
   db: Connection,
   req: Request,
   next: fn(String) -> Response,
 ) -> Response {
   case wisp.get_cookie(req, "auth_token", wisp.Signed) {
-    Ok(_) -> {
-      case token.find("auth_token", token, db) {
+    Ok(t) -> {
+      case token.find("token", t, db) {
         Ok(tok) -> {
           case tok {
             Some(t) -> {

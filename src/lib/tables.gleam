@@ -1,5 +1,5 @@
 pub fn create() -> String {
-  user() <> blogs() <> auth_token()
+  user() <> articles() <> auth_token()
 }
 
 fn user() -> String {
@@ -15,10 +15,10 @@ fn user() -> String {
 	"
 }
 
-fn blogs() -> String {
+fn articles() -> String {
   "
-	CREATE TABLE IF NOT EXISTS blogs (
-		id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	CREATE TABLE IF NOT EXISTS articles (
+		id TEXT PRIMARY KEY NOT NULL UNIQUE,
 		title TEXT NOT NULL DEFAULT 'Untitled',
 		body TEXT NOT NULL DEFAULT '',
 		user_id INTEGER NOT NULL,
