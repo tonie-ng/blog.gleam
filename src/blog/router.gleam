@@ -11,8 +11,10 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["signup"] -> auth.signup(req, ctx)
     ["signin"] -> auth.signin(req, ctx)
     ["signout"] -> auth.signout(req, ctx)
+    ["users"] -> user.get_users(req, ctx)
     ["users", id] -> user.one(req, ctx, id)
     ["articles"] -> article.all(req, ctx)
+    ["articles", id] -> article.one(req, ctx, id)
     _ -> wisp.not_found()
   }
 }

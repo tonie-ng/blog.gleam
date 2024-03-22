@@ -35,3 +35,11 @@ pub type SignUp {
 pub type SignIn {
   SignIn(email: String, password: String)
 }
+
+pub type UpdateUser {
+  UpdateUser(email: String, password: String, username: String)
+}
+
+pub type Update {
+  Update(field: String, value: String)
+}

@@ -32,7 +32,7 @@ pub fn signup(req: Request, ctx: Context) -> Response {
     }
     Error(err) -> {
       let error = errors.sqlight_err(err)
-      wisp.json_response(error, 500)
+      wisp.json_response(error, 400)
     }
   }
 }
@@ -57,7 +57,7 @@ pub fn signin(req: Request, ctx: Context) -> Response {
     }
     Error(err) -> {
       let res = errors.sqlight_err(err)
-      wisp.json_response(res, 500)
+      wisp.json_response(res, 400)
     }
   }
 }
@@ -130,7 +130,7 @@ fn check_user_signup(
     }
     Error(err) -> {
       let error = errors.sqlight_err(err)
-      wisp.json_response(error, 500)
+      wisp.json_response(error, 400)
     }
   }
 }
@@ -163,7 +163,7 @@ fn check_user_signin(
     }
     Error(err) -> {
       let error = errors.sqlight_err(err)
-      wisp.json_response(error, 500)
+      wisp.json_response(error, 400)
     }
   }
 }

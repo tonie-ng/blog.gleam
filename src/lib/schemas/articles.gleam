@@ -6,23 +6,56 @@ import sqlight.{type Connection, type Error}
 import lib/types
 import gleam/dynamic
 
-pub fn update(db: Connection, id: String, value: String, field: String) {
+pub fn update_one(
+  db: Connection,
+  value: String,
+  field: String,
+  id: String,
+) -> Result(String, Error) {
   let sql = "
 		UPDATE articles
 		SET " <> field <> " = ?, updated_at = datetime('now')
-		WHERE id = ?
+		WHERE id = ?;
 	"
   let row =
     sqlight.query(
       sql,
       db,
       with: [sqlight.text(value), sqlight.text(id)],
-      expecting: decode_article(),
+      expecting: Ok,
     )
 
   case row {
-    Ok([article]) | Ok([article, ..]) -> Ok(Some(article))
-    Ok([]) -> Ok(None)
+    Ok(_) -> Ok(id)
+    Error(err) -> Error(err)
+  }
+}
+
+pub fn update(
+  db: Connection,
+  id: String,
+  input: types.ArticleInput,
+) -> Result(String, Error) {
+  let sql =
+    "
+		UPDATE articles
+		SET title = ?, body = ?, updated_at = datetime('now')
+		WHERE id = ?;
+	"
+  let row =
+    sqlight.query(
+      sql,
+      db,
+      with: [
+        sqlight.text(input.title),
+        sqlight.text(input.body),
+        sqlight.text(id),
+      ],
+      expecting: Ok,
+    )
+
+  case row {
+    Ok(_) -> Ok(id)
     Error(err) -> Error(err)
   }
 }
@@ -101,13 +134,11 @@ pub fn find_one(
   }
 }
 
-pub fn all(
-  db: Connection,
-  id: String,
-) -> Result(Option(List(types.Article)), Error) {
+pub fn all(db: Connection, id: String) -> Result(List(types.Article), Error) {
   let sql =
     "
 		SELECT * FROM articles
+		WHERE user_id = ?;
 	"
 
   let row =
@@ -119,7 +150,7 @@ pub fn all(
     )
 
   case row {
-    Ok(articles) -> Ok(Some(articles))
+    Ok(articles) -> Ok(articles)
     Error(err) -> Error(err)
   }
 }

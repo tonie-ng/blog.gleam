@@ -6,6 +6,62 @@ import lib/types
 import gleam/string_builder.{type StringBuilder}
 import gleam/option.{type Option, None, Some}
 
+pub fn update(
+  db: Connection,
+  id: String,
+  input: types.UpdateUser,
+) -> Result(String, Error) {
+  let sql =
+    "
+		UPDATE users
+		SET email = ?, username = ?, password = ?, updated_at = datetime('now')
+		WHERE id = ?;
+	"
+  let password = hash(input.password, [])
+  let row =
+    sqlight.query(
+      sql,
+      db,
+      with: [
+        sqlight.text(input.email),
+        sqlight.text(input.username),
+        sqlight.text(password),
+        sqlight.text(id),
+      ],
+      expecting: Ok,
+    )
+
+  case row {
+    Ok(_) -> Ok(id)
+    Error(err) -> Error(err)
+  }
+}
+
+pub fn update_one(
+  db: Connection,
+  value: String,
+  field: String,
+  id: String,
+) -> Result(String, Error) {
+  let sql = "
+		UPDATE users
+		SET " <> field <> " = ?, updated_at = datetime('now')
+		WHERE id = ?;
+	"
+  let row =
+    sqlight.query(
+      sql,
+      db,
+      with: [sqlight.text(value), sqlight.text(id)],
+      expecting: Ok,
+    )
+
+  case row {
+    Ok(_) -> Ok(id)
+    Error(err) -> Error(err)
+  }
+}
+
 pub fn find_one(
   value: String,
   db: Connection,
@@ -26,6 +82,16 @@ pub fn find_one(
   case row {
     Ok([user]) | Ok([user, ..]) -> Ok(Some(user))
     Ok([]) -> Ok(None)
+    Error(err) -> Error(err)
+  }
+}
+
+pub fn all(db: Connection) -> Result(List(types.User), Error) {
+  let sql = "SELECT * FROM users;"
+
+  let row = sqlight.query(sql, on: db, with: [], expecting: decode_user())
+  case row {
+    Ok(users) -> Ok(users)
     Error(err) -> Error(err)
   }
 }
@@ -102,4 +168,4 @@ fn decode_user() -> dynamic.Decoder(types.User) {
 }
 
 @external(erlang, "Elixir.Argon2", "hash_pwd_salt")
-fn hash(password: String, list: List(a)) -> String
+pub fn hash(password: String, list: List(a)) -> String
